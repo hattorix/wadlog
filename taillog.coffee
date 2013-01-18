@@ -55,7 +55,7 @@ wadlogTailf = (from, interval, condition = null) ->
     wadlog.queryAll query, rowFunction, (l, q) -> setTimeout execQuery, interval, l, q
   execQuery null, createQuery(from, condition)
 
-from      = if opts.get 'from' then new Date opts.get('from') else new Date()
+from      = if opts.get 'from' then new Date opts.get('from') else new Date(new Date().getTime() - 300000)
 condition = opts.get 'c'
 
 if opts.get 'f'
