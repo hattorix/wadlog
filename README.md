@@ -1,0 +1,4 @@
+wadlog
+======
+
+Azure WADLogsTable loader
