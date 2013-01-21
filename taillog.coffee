@@ -40,8 +40,8 @@ createQuery = (from, condition) ->
   ticks = wadlog.getTicks from
   query = wadlog
     .select(columns...)
-    .where('PartitionKey > ?', "0#{ticks}")
-    .and("EventTickCount > #{ticks}L")
+    .where('PartitionKey >= ?', "0#{ticks}")
+    .and("EventTickCount >= #{ticks}L")
   if condition? then query.and condition else query
 
 # log を tail -f する関数
