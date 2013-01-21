@@ -16,6 +16,10 @@ options = [
   , description : 'from date...'
   , value       : true
   },
+  { long        : 'to'
+  , description : 'to date...'
+  , value       : true
+  },
   { short       : 'c'
   , long        : 'condition'
   , description : 'table select condition'
@@ -36,12 +40,17 @@ rowFunction = (entity) ->
 
 # query オブジェクトを生成する
 columns = ['EventTickCount', 'Level', 'Role', 'RoleInstance', 'Message']
-createQuery = (from, condition) ->
+createQuery = (from, to, condition) ->
   ticks = wadlog.getTicks from
   query = wadlog
     .select(columns...)
     .where('PartitionKey >= ?', "0#{ticks}")
     .and("EventTickCount >= #{ticks}L")
+  if to?
+    toTicks = wadlog.getTicks to
+    query
+      .and('PartitionKey < ?', '0' + (toTicks + 300000))
+      .and("EventTickCount <= #{toTicks}L")
   if condition? then query.and condition else query
 
 # log を tail -f する関数
@@ -53,13 +62,14 @@ wadlogTailf = (from, interval, condition = null) ->
       query.and condition if condition?
 
     wadlog.queryAll query, rowFunction, (l, q) -> setTimeout execQuery, interval, l, q
-  execQuery null, createQuery(from, condition)
+  execQuery null, createQuery(from, null, condition)
 
 from      = if opts.get 'from' then new Date opts.get('from') else new Date(new Date().getTime() - 300000)
 condition = opts.get 'c'
+to        = new Date opts.get('to') if opts.get 'to'
 
-if opts.get 'f'
+if opts.get 'f' and not to?
   interval = if opts.get 's' then opts.get('s') * 1000  else 15000
   wadlogTailf from, interval, condition
 else
-  wadlog.queryAll createQuery(from, condition), rowFunction
+  wadlog.queryAll createQuery(from, to, condition), rowFunction
