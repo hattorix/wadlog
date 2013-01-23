@@ -68,7 +68,7 @@ from      = if opts.get 'from' then new Date opts.get('from') else new Date(new 
 condition = opts.get 'c'
 to        = new Date opts.get('to') if opts.get 'to'
 
-if opts.get 'f' and not to?
+if opts.get('f') and not to?
   interval = if opts.get 's' then opts.get('s') * 1000  else 15000
   wadlogTailf from, interval, condition
 else
