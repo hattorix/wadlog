@@ -5,6 +5,7 @@
   "dependencies": {
     "azure": "0.6.9",
     "opts": "1.2.2",
+    "node-syslog": "git://github.com/hattorix/node-syslog.git#50ec51a",
     "coffee-script": ">= 1.4.0"
   }
 }
