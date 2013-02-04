@@ -1,4 +1,5 @@
 opts   = require 'opts'
+syslog = require 'node-syslog'
 wadlog = require './wadlog'
 
 # Azure account
@@ -34,9 +35,10 @@ options = [
 opts.parse options, true
 
 # ログの行に対する処理
+syslog.init "wadlog", syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_LOCAL3
 rowFunction = (entity) ->
   date = wadlog.ticksToDate entity.EventTickCount
-  console.log "#{date} [#{entity.RoleInstance}] #{entity.Message}"
+  syslog.log syslog.LOG_INFO, "#{date} [#{entity.RoleInstance}] #{entity.Message}"
 
 # query オブジェクトを生成する
 columns = ['EventTickCount', 'Level', 'Role', 'RoleInstance', 'Message']
