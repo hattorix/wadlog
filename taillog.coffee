@@ -36,9 +36,22 @@ opts.parse options, true
 
 # ログの行に対する処理
 syslog.init "wadlog", syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_LOCAL3
+getLevel = (sourceLevel) ->
+  switch sourceLevel
+    when 1 # System.Diagnostics.TraceEventType.Critical
+      syslog.LOG_CRIT
+    when 2 # System.Diagnostics.TraceEventType.Error
+      syslog.LOG_ERR
+    when 3 # System.Diagnostics.TraceEventType.Warning
+      syslog.LOG_WARNING
+    when 4 # System.Diagnostics.TraceEventType.Information
+      syslog.LOG_INFO
+    else # System.Diagnostics.TraceEventType.Verbose
+      syslog.LOG_DEBUG
 rowFunction = (entity) ->
   date = wadlog.ticksToDate entity.EventTickCount
-  syslog.log syslog.LOG_INFO, "#{date} [#{entity.RoleInstance}] #{entity.Message}"
+  level = getLevel entity.Level
+  syslog.log level, "#{date} [#{entity.RoleInstance}] #{entity.Message}"
 
 # query オブジェクトを生成する
 columns = ['EventTickCount', 'Level', 'Role', 'RoleInstance', 'Message']
