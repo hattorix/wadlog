@@ -111,7 +111,7 @@ if config.clusterRoles?
       # タグ名をロール名で上書き
       syslog.init msg, syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_LOCAL3
 
-      condition += " and " if condition? and condition != ""
+      condition += ' and ' if condition? and condition != ''
       condition = (condition ? '') + "Role == '#{msg}'"
       mainProc()
 
