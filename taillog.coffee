@@ -36,7 +36,7 @@ options = [
 opts.parse options, true
 
 # ログの行に対する処理
-syslog.init "wadlog", syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_LOCAL3
+syslog.init "wadlog", syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_LOCAL2
 getLevel = (sourceLevel) ->
   switch sourceLevel
     when 1 # System.Diagnostics.TraceEventType.Critical
@@ -109,7 +109,7 @@ if config.clusterRoles?
     # 子プロセス
     process.on 'message', (msg) ->
       # タグ名をロール名で上書き
-      syslog.init msg, syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_LOCAL3
+      syslog.init msg, syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_LOCAL2
 
       condition += ' and ' if condition? and condition != ''
       condition = (condition ? '') + "Role == '#{msg}'"
