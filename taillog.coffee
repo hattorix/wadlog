@@ -47,7 +47,7 @@ getLevel = (sourceLevel) ->
       syslog.LOG_WARNING
     when 4 # System.Diagnostics.TraceEventType.Information
       syslog.LOG_INFO
-    else # System.Diagnostics.TraceEventType.Verbose
+    else   # System.Diagnostics.TraceEventType.Verbose
       syslog.LOG_DEBUG
 rowFunction = (entity) ->
   date = wadlog.ticksToDate entity.EventTickCount
