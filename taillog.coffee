@@ -101,6 +101,10 @@ if config.clusterRoles?
       worker = cluster.fork()
       worker.send role
 
+    # 子プロセスが死んだら知らせる
+    cluster.on 'exit', (worker, code, signal) ->
+      console.log "worker #{worker.process.pid} died"
+
   else
     # 子プロセス
     process.on 'message', (msg) ->
