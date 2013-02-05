@@ -1,6 +1,7 @@
-opts   = require 'opts'
-syslog = require 'node-syslog'
-wadlog = require './wadlog'
+cluster = require 'cluster'
+syslog  = require 'node-syslog'
+opts    = require 'opts'
+wadlog  = require './wadlog'
 
 # Azure account
 config = require './config'
@@ -83,8 +84,33 @@ from      = if opts.get 'from' then new Date opts.get('from') else new Date(new 
 condition = opts.get 'c'
 to        = new Date opts.get('to') if opts.get 'to'
 
-if opts.get('f') and not to?
-  interval = if opts.get 's' then opts.get('s') * 1000  else 15000
-  wadlogTailf from, interval, condition
+# メイン関数
+mainProc = ->
+  if opts.get('f') and not to?
+    interval = if opts.get 's' then opts.get('s') * 1000  else 15000
+    wadlogTailf from, interval, condition
+  else
+    wadlog.queryAll createQuery(from, to, condition), rowFunction
+      , -> process.exit()
+
+if config.clusterRoles?
+  # クラスタ実行
+  if cluster.isMaster
+    # 親プロセス
+    for role in config.clusterRoles
+      worker = cluster.fork()
+      worker.send role
+
+  else
+    # 子プロセス
+    process.on 'message', (msg) ->
+      # タグ名をロール名で上書き
+      syslog.init msg, syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_LOCAL3
+
+      condition += " and " if condition? and condition != ""
+      condition = (condition ? '') + "Role == '#{msg}'"
+      mainProc()
+
 else
-  wadlog.queryAll createQuery(from, to, condition), rowFunction
+  # 単独プロセスで実行
+  mainProc()
