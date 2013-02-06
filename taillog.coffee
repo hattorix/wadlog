@@ -49,10 +49,15 @@ getLevel = (sourceLevel) ->
       syslog.LOG_INFO
     else   # System.Diagnostics.TraceEventType.Verbose
       syslog.LOG_DEBUG
-rowFunction = (entity) ->
-  date = wadlog.ticksToDate entity.EventTickCount
-  level = getLevel entity.Level
-  syslog.log level, "#{date} [#{entity.RoleInstance}] #{entity.Message}"
+if require('os').platform() != 'win32'
+  rowFunction = (entity) ->
+    date = wadlog.ticksToDate entity.EventTickCount
+    level = getLevel entity.Level
+    syslog.log level, "#{date} [#{entity.RoleInstance}] #{entity.Message}"
+else
+  rowFunction = (entity) ->
+    date = wadlog.ticksToDate entity.EventTickCount
+    console.log "#{date} [#{entity.RoleInstance}] #{entity.Message}"
 
 # query オブジェクトを生成する
 columns = ['EventTickCount', 'Level', 'Role', 'RoleInstance', 'Message']
