@@ -42,7 +42,9 @@ exports.queryAll = (query, process, finished = null) ->
       if retry < 3
         retry += 1
         console.error "[Request failed (Retry #{retry}/3)] #{error}"
-        setTimeout tableService.queryEntities, 10000, query, QueryCallback
+        setTimeout ->
+          tableService.queryEntities query, QueryCallback
+        , 10000
       else
         console.error "[Gave up...] #{error}"
       return
