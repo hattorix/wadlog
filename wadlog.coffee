@@ -35,10 +35,16 @@ exports.next = (lastEntity, columns) ->
 exports.queryAll = (query, process, finished = null) ->
   tableService = azure.createTableService()
   lastEntity = null
+  retry = 0
 
   QueryCallback = (error, entities, options) ->
     if error
-      console.error error
+      if retry < 3
+        retry += 1
+        console.error "[Request failed (Retry #{retry}/3)] #{error}"
+        setTimeout tableService.queryEntities, 10000, query, QueryCallback
+      else
+        console.error "[Gave up...] #{error}"
       return
 
     if entities?
