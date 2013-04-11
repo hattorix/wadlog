@@ -48,7 +48,7 @@ exports.queryAll = (query, process, finished = null) ->
           tableService.queryEntities query, QueryCallback
         , retrySleep[retry]
         retry += 1
-        console.error "[Request failed (Retry #{retry}/3)] #{error}"
+        console.error "[Request failed (Retry #{retry}/#{retrySleep.length})] #{error}"
       else
         console.error "[Gave up...] #{error}"
         console.error query
