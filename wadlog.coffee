@@ -42,6 +42,9 @@ exports.queryAll = (query, process, finished = null) ->
     if error
       if retry < retrySleep.length
         setTimeout ->
+          # なぜか以下のエラーになることがあるので、tableService を再生成
+          # - Error: One of the request inputs is not valid.
+          tableService = azure.createTableService()
           tableService.queryEntities query, QueryCallback
         , retrySleep[retry]
         retry += 1
