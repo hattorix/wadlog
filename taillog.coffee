@@ -74,15 +74,55 @@ createQuery = (from, to, condition) ->
       .and("EventTickCount <= #{toTicks}L")
   if condition? then query.and condition else query
 
+# 連想配列の長さを取得します
+getHashLength = (h) ->
+  len = 0
+  for k, v of h
+    len += 1
+  return len
+
+# インスタンスごとの query を設定します
+setRoleCondition = (query, roles) ->
+  length = getHashLength roles
+  i = 0
+  for role, tick of roles
+    i += 1
+    if i == 1
+      query.and("((RoleInstance == ?", role)
+        .and("EventTickCount > #{tick}L)")
+    else if i == length
+      query.or("(RoleInstance == ?", role)
+        .and("EventTickCount > #{tick}L)")
+    else
+      query.or("(RoleInstance == ?", role)
+        .and("EventTickCount > #{tick}L)")
+  i = 0
+  for role, tick of roles
+    i += 1
+    if i == 1
+      query.or("(RoleInstance != ?" + (if length == 1 then "))" else ""), role)
+    else if i == length
+      query.and("RoleInstance != ?))", role)
+    else
+      query.and("RoleInstance != ?", role)
+
 # log を tail -f する関数
 wadlogTailf = (from, interval, condition = null) ->
+  roleConditions = []
   execQuery = (lastRow, query) ->
     if lastRow?
       # 前回取得した最終行の次から取得するクエリを生成
       query = wadlog.next lastRow, columns
       query.and condition if condition?
+      setRoleCondition query, roleConditions
 
-    wadlog.queryAll query, rowFunction, (l, q) -> setTimeout execQuery, interval, l, q
+    wadlog.queryAll query
+    , (entity) ->
+      # インスタンスの最新のログの Tick を保存
+      roleConditions[entity.RoleInstance] = entity.EventTickCount
+      rowFunction entity
+    , (l, q) ->
+      setTimeout execQuery, interval, l, q
   execQuery null, createQuery(from, null, condition)
 
 from      = if opts.get 'from' then new Date opts.get('from') else new Date(new Date().getTime() - 300000)

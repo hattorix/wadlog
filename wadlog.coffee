@@ -12,24 +12,32 @@ exports.ticksToDate = (ticks) ->
   offset = (ticks - EPOCH) / 10000
   new Date(offset)
 
+# 配列 array に 'PartitionKey' が存在することを保証する
+sumPartitionKey = (array) ->
+  hasPartitionKey = false
+  # copy array
+  tmp = []
+  for item in array
+    hasPartitionKey = true if not hasPartitionKey and item == 'PartitionKey'
+    tmp.push item
+  # 'PartitionKey' がなかったら足す
+  tmp.push 'PartitionKey' if not hasPartitionKey
+  return tmp
+
 # base query
 exports.select = () ->
-  columns = ['PartitionKey', 'RowKey']
-  for arg in arguments
-    columns.push arg
+  columns = sumPartitionKey arguments
   azure.TableQuery
     .select(columns...)
     .from('WADLogsTable')
 
 # lastEntity より新しい行を取得するクエリを生成します
 exports.next = (lastEntity, columns) ->
-  tmp = columns.concat ['PartitionKey', 'RowKey']
+  columns = sumPartitionKey columns
   azure.TableQuery
-    .select(tmp...)
+    .select(columns...)
     .from('WADLogsTable')
     .where('PartitionKey >= ?', lastEntity.PartitionKey)
-    .and('RowKey != ?', lastEntity.RowKey)
-    .whereNextKeys(lastEntity.PartitionKey, lastEntity.RowKey)
 
 # query にマッチするすべての行を取得
 exports.queryAll = (query, process, finished = null) ->
