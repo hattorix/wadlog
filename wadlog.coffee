@@ -35,10 +35,23 @@ exports.next = (lastEntity, columns) ->
 exports.queryAll = (query, process, finished = null) ->
   tableService = azure.createTableService()
   lastEntity = null
+  retry = 0
+  retrySleep = [10000, 20000, 40000, 80000, 160000, 320000]
 
   QueryCallback = (error, entities, options) ->
     if error
-      console.error error
+      if retry < retrySleep.length
+        setTimeout ->
+          # なぜか以下のエラーになることがあるので、tableService を再生成
+          # - Error: One of the request inputs is not valid.
+          tableService = azure.createTableService()
+          tableService.queryEntities query, QueryCallback
+        , retrySleep[retry]
+        retry += 1
+        console.error "[Request failed (Retry #{retry}/#{retrySleep.length})] #{error}"
+      else
+        console.error "[Gave up...] #{error}"
+        console.error query
       return
 
     if entities?
