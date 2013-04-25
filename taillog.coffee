@@ -87,6 +87,8 @@ setRoleCondition = (query, roles) ->
   i = 0
   for role, tick of roles
     i += 1
+    # NOTE: ここで、最後に取得した行の Tick より大きいもの (Greater Than) に絞っているはずだが、
+    #       最後に取得した行の Tick 以上 (Greater Equal) を取ってくることがある。謎い。
     if i == 1
       query.and("((RoleInstance == ?", role)
         .and("EventTickCount > #{tick}L)")
@@ -118,10 +120,15 @@ wadlogTailf = (from, interval, condition = null) ->
 
     wadlog.queryAll query
     , (entity) ->
-      # インスタンスの最新のログの Tick を保存
-      roleConditions[entity.RoleInstance] = entity.EventTickCount
-      rowFunction entity
+      tick = entity.EventTickCount
+      # NOTE: setRoleCondition の NOTE の通り、最後に取得した Tick と同じ行を取得することがあるので、
+      #       ここで、自前でふるい落とす。
+      if not roleConditions[entity.RoleInstance]? or tick > roleConditions[entity.RoleInstance]
+        # インスタンスごとに、最新のログの Tick を保存
+        roleConditions[entity.RoleInstance] = tick
+        rowFunction entity
     , (l, q) ->
+      console.log "wait ..."
       setTimeout execQuery, interval, l, q
   execQuery null, createQuery(from, null, condition)
 
