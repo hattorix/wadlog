@@ -128,7 +128,6 @@ wadlogTailf = (from, interval, condition = null) ->
         roleConditions[entity.RoleInstance] = tick
         rowFunction entity
     , (l, q) ->
-      console.log "wait ..."
       setTimeout execQuery, interval, l, q
   execQuery null, createQuery(from, null, condition)
 
